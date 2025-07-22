@@ -3,18 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 import PyPDF2
 import io
 import os
-from openai import OpenAI
+import httpx
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # ✅ Make sure the key is found
-if not OPENAI_API_KEY:
-    raise ValueError("❌ OPENAI_API_KEY not found in environment variables.")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
+if not OPENROUTER_API_KEY:
+    raise ValueError("❌ OPENROUTER_API_KEY not found in environment variables.")
 
 app = FastAPI()
 
@@ -26,6 +24,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Utility to extract text from PDF
 def extract_text_from_pdf(pdf_file):
@@ -49,36 +48,44 @@ def extract_text(file: UploadFile):
 @app.post("/analyze")
 async def analyze_resume(file: UploadFile = File(...), job_role: str = Form("")):
     try:
-        resume_text = extract_text(file)
+        # Read file contents once
+        file_contents = await file.read()
 
-        if not resume_text.strip():
-            return {"error": "Empty or unreadable file."}
+        # Decode bytes to string for prompt
+        resume_text = file_contents.decode()
 
-        prompt = f"""Please analyze this resume and provide constructive feedback.
-        Focus on:
-        1. Content clarity
-        2. Skills presentation
-        3. Experience descriptions
-        4. Improvements for {job_role or 'general applications'}
+        prompt = f"""You are an expert resume reviewer. Review the following resume for a {job_role} position, and give actionable, detailed feedback:\n\n{resume_text}"""
 
-        Resume:
-        {resume_text}
-        """
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Referer": "http://localhost:3000",  # replace with your deployed frontend URL if needed
+            "X-Title": "AI Resume Critique",
+        }
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
+        body = {
+            "model": "openai/gpt-4o",  # you can switch models here if you want
+            "messages": [
                 {"role": "system", "content": "You are an expert resume reviewer."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.7,
-            max_tokens=1000,
-        )
+            "temperature": 0.7,
+            "max_tokens": 1000,
+        }
 
-        return {"analysis": response.choices[0].message.content}
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=body,
+                headers=headers,
+            )
+            response.raise_for_status()
+            result = response.json()
+
+        return {"analysis": result["choices"][0]["message"]["content"]}
 
     except Exception as e:
         return {"error": f"Error analyzing resume: {str(e)}"}
+
 
 # (Optional) Separate endpoint to test file upload
 @app.post("/upload")
@@ -86,6 +93,3 @@ async def upload_resume(file: UploadFile = File(...)):
     contents = await file.read()
     filename = file.filename
     return {"filename": filename, "message": "File received successfully!"}
-
-
-
