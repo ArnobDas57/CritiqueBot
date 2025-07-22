@@ -68,3 +68,10 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
         return {"analysis": response.choices[0].message.content}
     except Exception as e:
         return {"error": str(e)}
+
+    @app.post("/upload")
+    async def upload_resume(file: UploadFile = File(...)):
+        contents = await file.read()
+        filename = file.filename
+
+        return {"filename": filename, "message": "File recieved successfully!"}
