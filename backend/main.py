@@ -51,8 +51,16 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
         # Read file contents once
         file_contents = await file.read()
 
-        # Decode bytes to string for prompt
-        resume_text = file_contents.decode()
+        if file.content_type not in ["application/pdf", "text/plain"]:
+            return {
+                "error": "Unsupported file type. Please upload a PDF or plain text file."
+            }
+
+        # Try decoding smartly
+        try:
+            resume_text = file_contents.decode("utf-8")
+        except UnicodeDecodeError:
+            resume_text = file_contents.decode("latin-1")  # fallback encoding
 
         prompt = f"""You are an expert resume reviewer. Review the following resume for a {job_role} position, and give actionable, detailed feedback:\n\n{resume_text}"""
 
@@ -63,7 +71,7 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
         }
 
         body = {
-            "model": "openai/gpt-4o",  # you can switch models here if you want
+            "model": "openchat/openchat-3.5",  # you can switch models here if you want
             "messages": [
                 {"role": "system", "content": "You are an expert resume reviewer."},
                 {"role": "user", "content": prompt},
@@ -84,7 +92,7 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
         return {"analysis": result["choices"][0]["message"]["content"]}
 
     except Exception as e:
-        return {"error": f"Error analyzing resume: {str(e)}"}
+        return {"error": f"❌Error analyzing resume: {str(e)}"}
 
 
 # (Optional) Separate endpoint to test file upload
