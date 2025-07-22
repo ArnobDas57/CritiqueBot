@@ -1,6 +1,11 @@
-def main():
-    print("Hello from ai-resume-critiquer!")
+import PyPDF2
+import io
+import os
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-if __name__ == "__main__":
-    main()
+
+ 
