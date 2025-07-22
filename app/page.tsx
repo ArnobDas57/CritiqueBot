@@ -6,15 +6,33 @@ import { Label } from "@/components/ui/label";
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      const fileType = selectedFile.type;
-      if (fileType === "application/pdf" || fileType === "text/plain") {
-        setFile(selectedFile);
-      } else {
-        alert("Please upload a PDF or TXT file");
-      }
+    if (!selectedFile) return;
+
+    const fileType = selectedFile.type;
+    if (fileType !== "application/pdf" && fileType !== "text/plain") {
+      alert("Please upload a PDF or TXT file");
+      return;
+    }
+
+    setFile(selectedFile);
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await fetch("http://localhost:8000/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      console.log(result);
+      alert(result.message || "Upload complete!");
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Upload failed. Please try again.");
     }
   };
 
