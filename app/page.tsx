@@ -1,7 +1,46 @@
+"use client";
+
+import { useState } from "react";
+
 export default function Home() {
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      const fileType = selectedFile.type;
+      if (fileType === "application/pdf" || fileType === "text/plain") {
+        setFile(selectedFile);
+      } else {
+        alert("Please upload a PDF or TXT file");
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-row justify-center mt-5">
-      <h1 className="text-6xl text-gray-800">CritiqueBot</h1>
+    <div className="flex flex-col items-center justify-center mt-10 px-4">
+      <h1 className="text-6xl text-gray-800 font-bold mb-6">CritiqueBot</h1>
+
+      <label
+        htmlFor="file-upload"
+        className="cursor-pointer px-6 py-4 mt-20 border-2 border-dashed border-gray-400 rounded-lg text-center hover:border-blue-500 transition-all"
+      >
+        <p className="mb-2 text-gray-600">
+          Click or drag a <span className="font-semibold">PDF</span> or{" "}
+          <span className="font-semibold">TXT</span> file to upload
+        </p>
+        <input
+          id="file-upload"
+          type="file"
+          accept=".pdf,.txt"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </label>
+
+      {file && (
+        <p className="mt-4 text-green-700 font-medium">Uploaded: {file.name}</p>
+      )}
     </div>
   );
 }
