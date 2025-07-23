@@ -22,9 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} antialiased min-h-screen flex flex-col bg-cyan-300 font-sans`}
+        className={`${inter.variable} antialiased min-h-screen flex flex-col bg-black font-sans`}
       >
-        <main className="flex-grow">{children}</main>
+        <main>{children}</main>
         <Footer />
       </body>
     </html>

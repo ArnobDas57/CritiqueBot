@@ -3,6 +3,56 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes wave-text {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes gradient-slow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradient-fast {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-slow {
+  animation: gradient-slow 6s ease infinite;
+}
+
+.animate-gradient-fast {
+  animation: gradient-fast 2s ease-in-out infinite;
+}
+.animate-wave-text {
+  display: inline-block;
+  animation: wave-text 1s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
 :root {
   --font-inter: "Inter", sans-serif;
   --radius: 0.625rem;

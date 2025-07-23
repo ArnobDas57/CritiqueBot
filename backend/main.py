@@ -16,17 +16,16 @@ if not OPENROUTER_API_KEY:
 
 app = FastAPI()
 
-# CORS setup for Next.js frontend
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # your frontend origin
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Utility to extract text from PDF
 def extract_text_from_pdf(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     text = ""
@@ -37,25 +36,22 @@ def extract_text_from_pdf(pdf_file):
     return text
 
 
-# General file text extractor
 def extract_text(file: UploadFile):
     if file.content_type == "application/pdf":
         return extract_text_from_pdf(io.BytesIO(file.file.read()))
     return file.file.read().decode("utf-8")
 
 
-# Fallback helper to try multiple API endpoints
 async def call_with_fallback(
-    endpoints: List[str],
-    json_body: dict,
-    headers: dict,
-    timeout: int = 10,
+    endpoints: List[str], json_body: dict, headers: dict, timeout: int = 10
 ) -> dict:
     last_exception = None
     async with httpx.AsyncClient(timeout=timeout) as client:
         for url in endpoints:
             try:
                 response = await client.post(url, json=json_body, headers=headers)
+                print(f"✅ Response status: {response.status_code}")
+                print(f"✅ Response body: {response.text}")
                 response.raise_for_status()
                 return response.json()
             except Exception as e:
@@ -64,11 +60,9 @@ async def call_with_fallback(
         raise last_exception
 
 
-# Endpoint to analyze resume
 @app.post("/analyze")
 async def analyze_resume(file: UploadFile = File(...), job_role: str = Form("")):
     try:
-        # Check supported file types early
         if file.content_type not in ["application/pdf", "text/plain"]:
             return {
                 "error": "Unsupported file type. Please upload a PDF or plain text file."
@@ -76,23 +70,32 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
 
         file_contents = await file.read()
 
-        # Decode file contents safely
         try:
             resume_text = file_contents.decode("utf-8")
         except UnicodeDecodeError:
             resume_text = file_contents.decode("latin-1")
 
-        prompt = f"""You are an expert resume reviewer. Review the following resume for a {job_role} position, and give actionable, detailed feedback:\n\n{resume_text}"""
+        # Limit resume_text length to avoid huge payloads
+        max_resume_length = 2000
+        if len(resume_text) > max_resume_length:
+            resume_text = resume_text[:max_resume_length] + "\n...[truncated]"
+
+        prompt = (
+            f"I am applying for a {job_role} role.\n"
+            f"Here is my resume:\n\n"
+            f"---RESUME START---\n"
+            f"{resume_text}\n"
+            f"---RESUME END---\n\n"
+            "Please review my resume and give actionable feedback focused on clarity, impact, keywords, formatting, grammar, and alignment with the job."
+        )
 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Referer": "http://localhost:3000",
-            "X-Title": "AI Resume Critique",
             "Content-Type": "application/json",
         }
 
         body = {
-            "model": "openchat/openchat-3.5",  # Change model here if desired
+            "model": "google/gemini-2.5-flash",
             "messages": [
                 {"role": "system", "content": "You are an expert resume reviewer."},
                 {"role": "user", "content": prompt},
@@ -101,21 +104,27 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
             "max_tokens": 1000,
         }
 
-        api_endpoints = [
-            "https://api.openrouter.ai/v1/chat/completions",
-            "https://openrouter.ai/api/v1/chat/completions",
-            # Add other fallback endpoints here if any
-        ]
+        print("Sending payload:", body)  # Debug print
 
-        result = await call_with_fallback(api_endpoints, body, headers)
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=body,
+                headers=headers,
+            )
+            response.raise_for_status()
+            result = response.json()
 
         return {"analysis": result["choices"][0]["message"]["content"]}
 
+    except httpx.HTTPStatusError as exc:
+        return {
+            "error": f"❌ HTTP error {exc.response.status_code}: {exc.response.text}"
+        }
     except Exception as e:
-        return {"error": f"❌Error analyzing resume: {str(e)}"}
+        return {"error": f"❌ Error analyzing resume: {str(e)}"}
 
 
-# (Optional) Separate endpoint to test file upload
 @app.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
     contents = await file.read()
