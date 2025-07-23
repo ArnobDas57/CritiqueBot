@@ -76,8 +76,8 @@ export default function Home() {
       <div className="flex items-center justify-center mb-10 mt-5 gap-3">
         <Image
           src="/ai-resume-logo.png"
-          width={45}
-          height={45}
+          width={60}
+          height={60}
           alt="CritiqueBot logo"
           className="hover:scale-110 transition-transform duration-300 drop-shadow-lg rounded-md animate-fade-in-up"
         />
@@ -92,7 +92,7 @@ export default function Home() {
       </p>
 
       <SpotlightCard
-        className="w-full max-w-2xl p-6 sm:p-10 rounded-xl border border-purple-800 bg-purple-950/70 shadow-xl backdrop-blur-md mt-5"
+        className="w-2/3 p-6 sm:p-10 rounded-xl border border-purple-800 bg-purple-950/70 shadow-xl backdrop-blur-md mt-5"
         spotlightColor="rgba(198, 182, 247, 0.3)"
       >
         <div className="flex flex-col space-y-6">
