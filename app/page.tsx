@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Label } from "@/components/ui/label";
+import SpotlightCard from "@/components/ui/SpotLightCard";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -59,59 +61,87 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center mt-10 px-4">
-      <h1 className="text-6xl text-gray-800 font-bold mb-6">CritiqueBot</h1>
-
-      <Label className="mt-15 text-xl text-blue-400">
-        {`Upload your Resume (PDF or Text)`}
-      </Label>
-      <label
-        htmlFor="file-upload"
-        className="cursor-pointer px-6 py-4 mt-5 border-2 border-dashed border-gray-400 rounded-lg text-center hover:border-blue-500 transition-all"
-      >
-        <p className="mb-2 text-gray-600">
-          Click or drag a <span className="font-semibold">PDF</span> or{" "}
-          <span className="font-semibold">TXT</span> file to upload
-        </p>
-        <input
-          id="file-upload"
-          type="file"
-          accept=".pdf,.txt"
-          onChange={handleFileChange}
-          className="hidden"
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 py-12 px-4 flex flex-col items-center justify-start">
+      <div className="flex items-center justify-center mb-10 gap-3">
+        <Image
+          src="/ai-resume-logo.png"
+          width={60}
+          height={60}
+          alt="CritiqueBot logo"
         />
-      </label>
+        <h1 className="text-5xl sm:text-6xl font-bold text-purple-100 drop-shadow-md">
+          CritiqueBot
+        </h1>
+      </div>
 
-      {file && (
-        <p className="mt-4 text-green-700 font-medium">Uploaded: {file.name}</p>
-      )}
-
-      <input
-        type="text"
-        placeholder="Optional job role (e.g., Frontend Developer)"
-        className="mt-6 px-4 py-2 border rounded-md w-full max-w-md"
-        value={jobRole}
-        onChange={(e) => setJobRole(e.target.value)}
-      />
-
-      <button
-        className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        onClick={handleAnalyze}
-        disabled={loading}
+      <SpotlightCard
+        className="w-full max-w-2xl p-6 sm:p-10 rounded-xl border border-purple-800 bg-purple-950/70 shadow-xl backdrop-blur-md"
+        spotlightColor="rgba(198, 182, 247, 0.3)"
       >
-        {loading ? "Analyzing..." : "Analyze Resume"}
-      </button>
+        <div className="flex flex-col space-y-6">
+          <div>
+            <Label className="text-lg font-medium text-purple-100">
+              Upload Your Resume (PDF or TXT)
+            </Label>
+            <label
+              htmlFor="file-upload"
+              className="mt-2 block w-full text-center cursor-pointer px-6 py-4 border-2 border-dashed border-purple-400 rounded-lg text-purple-100 hover:border-purple-500 hover:bg-purple-800/30 transition-all"
+            >
+              <p className="text-sm sm:text-base">
+                Click or drag a <span className="font-semibold">PDF</span> or{" "}
+                <span className="font-semibold">TXT</span> file to upload
+              </p>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf,.txt"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+            {file && (
+              <p className="mt-2 text-green-400 text-sm">
+                ✅ Uploaded: {file.name}
+              </p>
+            )}
+          </div>
 
-      {error && <p className="mt-4 text-red-600 font-medium">❌ {error}</p>}
+          <div>
+            <input
+              type="text"
+              placeholder="Optional job role (e.g., Frontend Developer)"
+              className="w-full px-4 py-2 rounded-md bg-slate-800 text-purple-100 border border-purple-500 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              value={jobRole}
+              onChange={(e) => setJobRole(e.target.value)}
+            />
+          </div>
 
-      {analysis && (
-        <div className="mt-10 p-6 border rounded-lg max-w-3xl w-full bg-gray-50 shadow">
-          <h2 className="text-2xl font-semibold mb-4 text-blue-700">
-            🧠 AI Resume Feedback
-          </h2>
-          <pre className="whitespace-pre-wrap text-gray-800">{analysis}</pre>
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+            className="px-6 py-3 w-full sm:w-auto bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Analyzing..." : "Analyze Resume"}
+          </button>
+
+          {error && (
+            <p className="text-red-500 font-medium text-sm sm:text-base">
+              ❌ {error}
+            </p>
+          )}
+
+          {analysis && (
+            <div className="mt-6 p-4 bg-slate-100 text-gray-800 rounded-lg shadow-inner max-h-[400px] overflow-y-auto">
+              <h2 className="text-xl font-semibold mb-3 text-purple-800">
+                🧠 AI Resume Feedback
+              </h2>
+              <pre className="whitespace-pre-wrap text-sm sm:text-base">
+                {analysis}
+              </pre>
+            </div>
+          )}
         </div>
-      )}
+      </SpotlightCard>
     </div>
   );
 }

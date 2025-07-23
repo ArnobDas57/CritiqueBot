@@ -5,12 +5,12 @@ import io
 import os
 import httpx
 from dotenv import load_dotenv
+from typing import List
 
 # Load environment variables
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# ✅ Make sure the key is found
 if not OPENROUTER_API_KEY:
     raise ValueError("❌ OPENROUTER_API_KEY not found in environment variables.")
 
@@ -44,34 +44,55 @@ def extract_text(file: UploadFile):
     return file.file.read().decode("utf-8")
 
 
+# Fallback helper to try multiple API endpoints
+async def call_with_fallback(
+    endpoints: List[str],
+    json_body: dict,
+    headers: dict,
+    timeout: int = 10,
+) -> dict:
+    last_exception = None
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        for url in endpoints:
+            try:
+                response = await client.post(url, json=json_body, headers=headers)
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                last_exception = e
+                print(f"⚠️ Request to {url} failed: {e}")
+        raise last_exception
+
+
 # Endpoint to analyze resume
 @app.post("/analyze")
 async def analyze_resume(file: UploadFile = File(...), job_role: str = Form("")):
     try:
-        # Read file contents once
-        file_contents = await file.read()
-
+        # Check supported file types early
         if file.content_type not in ["application/pdf", "text/plain"]:
             return {
                 "error": "Unsupported file type. Please upload a PDF or plain text file."
             }
 
-        # Try decoding smartly
+        file_contents = await file.read()
+
+        # Decode file contents safely
         try:
             resume_text = file_contents.decode("utf-8")
         except UnicodeDecodeError:
-            resume_text = file_contents.decode("latin-1")  # fallback encoding
+            resume_text = file_contents.decode("latin-1")
 
         prompt = f"""You are an expert resume reviewer. Review the following resume for a {job_role} position, and give actionable, detailed feedback:\n\n{resume_text}"""
 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Referer": "http://localhost:3000",  # replace with your deployed frontend URL if needed
+            "Referer": "http://localhost:3000",
             "X-Title": "AI Resume Critique",
+            "Content-Type": "application/json",
         }
 
         body = {
-            "model": "openchat/openchat-3.5",  # you can switch models here if you want
+            "model": "openchat/openchat-3.5",  # Change model here if desired
             "messages": [
                 {"role": "system", "content": "You are an expert resume reviewer."},
                 {"role": "user", "content": prompt},
@@ -80,14 +101,13 @@ async def analyze_resume(file: UploadFile = File(...), job_role: str = Form(""))
             "max_tokens": 1000,
         }
 
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                json=body,
-                headers=headers,
-            )
-            response.raise_for_status()
-            result = response.json()
+        api_endpoints = [
+            "https://api.openrouter.ai/v1/chat/completions",
+            "https://openrouter.ai/api/v1/chat/completions",
+            # Add other fallback endpoints here if any
+        ]
+
+        result = await call_with_fallback(api_endpoints, body, headers)
 
         return {"analysis": result["choices"][0]["message"]["content"]}
 
