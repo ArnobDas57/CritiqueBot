@@ -3,13 +3,13 @@
   <h1>CritiqueBot: AI-Powered Resume Feedback Assistant</h1>
 </div>
 
-CritiqueBot instantly delivers personalized, actionable AI feedback on your resume to help you stand out and get hired faster. Built with a sleek Next.js frontend and a FastAPI backend leveraging OpenAI’s powerful language models, CritiqueBot makes resume critique simple, interactive, and effective.
+CritiqueBot instantly delivers personalized, actionable AI feedback on your resume to help you stand out and get hired faster. Built with a sleek Next.js frontend and a FastAPI backend leveraging the Google Gemini model, powerful language models, CritiqueBot makes resume critique simple, interactive, and effective.
 
 ## 🌐 Live Demo
 
 🖥️ https://critique-bot.vercel.app/
 
-Backend API: FastAPI + OpenAI API  
+Backend API: FastAPI + OpenRouter AI API  
 Frontend: Next.js + React + Tailwind CSS
 
 ---
