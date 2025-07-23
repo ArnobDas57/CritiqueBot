@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import SpotlightCard from "@/components/ui/SpotLightCard";
 import Galaxy from "@/components/ui/Galaxy";
+import Feedback from "@/components/Feedback/Feedback";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -24,6 +25,22 @@ export default function Home() {
         setError("Please upload a PDF or TXT file");
       }
     }
+  };
+
+  // 🪄 Optional: Normalize analysis with basic formatting (just in case)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formatAnalysis = (raw: any): string => {
+    if (!raw) return "";
+    if (typeof raw !== "string") raw = JSON.stringify(raw, null, 2);
+
+    // Add line breaks after section headers if missing
+    return raw
+      .replace(
+        /(CLARITY|IMPACT|KEYWORDS|FORMATTING|GRAMMAR|TARGETING|OVERALL EFFECTIVENESS)[:\-]*/gi,
+        "\n\n$1:\n"
+      )
+      .replace(/\n{3,}/g, "\n\n") // avoid triple newlines
+      .trim();
   };
 
   const handleAnalyze = async () => {
@@ -51,7 +68,8 @@ export default function Home() {
       if (data.error) {
         setError(data.error);
       } else {
-        setAnalysis(data.analysis);
+        const formatted = formatAnalysis(data.analysis);
+        setAnalysis(formatted);
       }
     } catch (err) {
       console.error("Error:", err);
@@ -177,38 +195,7 @@ export default function Home() {
             </p>
           )}
 
-          {analysis && (
-            <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-purple-100 via-purple-50 to-white shadow-xl border border-purple-300 animate-fade-in-up transition-all duration-500">
-              <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
-                <span className="animate-pulse">🧠</span> AI Resume Feedback
-              </h2>
-              <div className="text-gray-800 space-y-3 text-sm sm:text-base leading-relaxed">
-                {analysis.split("\n").map((line, idx) => {
-                  const trimmed = line.trim();
-
-                  // Bold section headers like "Clarity and Conciseness:"
-                  if (/^[A-Z][\w\s&]+:/.test(trimmed)) {
-                    return (
-                      <p key={idx}>
-                        <strong>{trimmed}</strong>
-                      </p>
-                    );
-                  }
-
-                  // Bold bullet points like "* Some point"
-                  if (/^\* /.test(trimmed)) {
-                    return (
-                      <p key={idx}>
-                        <strong>• {trimmed.slice(2)}</strong>
-                      </p>
-                    );
-                  }
-
-                  return <p key={idx}>{trimmed}</p>;
-                })}
-              </div>
-            </div>
-          )}
+          {analysis && <Feedback analysis={analysis} />}
         </div>
       </SpotlightCard>
     </div>
