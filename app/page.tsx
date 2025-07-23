@@ -14,6 +14,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const BASE_URL =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -58,7 +61,7 @@ export default function Home() {
     formData.append("job_role", jobRole);
 
     try {
-      const res = await fetch("http://localhost:8000/analyze", {
+      const res = await fetch(BASE_URL, {
         method: "POST",
         body: formData,
       });
