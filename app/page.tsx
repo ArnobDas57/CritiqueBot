@@ -182,12 +182,30 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
                 <span className="animate-pulse">🧠</span> AI Resume Feedback
               </h2>
-              <div className="prose prose-sm sm:prose-base max-w-none text-gray-800">
-                {analysis.split("\n").map((line, idx) => (
-                  <p key={idx} className="mb-2 leading-relaxed">
-                    {line}
-                  </p>
-                ))}
+              <div className="text-gray-800 space-y-3 text-sm sm:text-base leading-relaxed">
+                {analysis.split("\n").map((line, idx) => {
+                  const trimmed = line.trim();
+
+                  // Bold section headers like "Clarity and Conciseness:"
+                  if (/^[A-Z][\w\s&]+:/.test(trimmed)) {
+                    return (
+                      <p key={idx}>
+                        <strong>{trimmed}</strong>
+                      </p>
+                    );
+                  }
+
+                  // Bold bullet points like "* Some point"
+                  if (/^\* /.test(trimmed)) {
+                    return (
+                      <p key={idx}>
+                        <strong>• {trimmed.slice(2)}</strong>
+                      </p>
+                    );
+                  }
+
+                  return <p key={idx}>{trimmed}</p>;
+                })}
               </div>
             </div>
           )}
