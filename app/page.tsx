@@ -139,7 +139,7 @@ export default function Home() {
             disabled={!file || loading}
             className="relative inline-flex items-center justify-center px-6 py-3 w-full sm:w-auto text-white rounded-lg overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed transition-transform transform hover:scale-105 focus:outline-none "
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 bg-[length:200%_200%] animate-gradient-slow group-hover:animate-gradient-fast rounded-lg blur-sm opacity-70 group-hover:opacity-100 transition-opacity duration-300"></span>
+            <span className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 bg-[length:200%_200%] animate-gradient-slow group-hover:pointer-fine:* group-hover:animate-gradient-fast rounded-lg blur-sm opacity-70 group-hover:opacity-100 transition-opacity duration-300"></span>
             <span className="relative z-10 font-semibold drop-shadow-md">
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -178,13 +178,17 @@ export default function Home() {
           )}
 
           {analysis && (
-            <div className="mt-6 p-4 bg-slate-100 text-gray-800 rounded-lg shadow-inner max-h-[400px] overflow-y-auto">
-              <h2 className="text-xl font-semibold mb-3 text-purple-800">
-                🧠 AI Resume Feedback
+            <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-purple-100 via-purple-50 to-white shadow-xl border border-purple-300 animate-fade-in-up transition-all duration-500">
+              <h2 className="text-2xl font-bold text-purple-800 mb-4 flex items-center gap-2">
+                <span className="animate-pulse">🧠</span> AI Resume Feedback
               </h2>
-              <pre className="whitespace-pre-wrap text-sm sm:text-base">
-                {analysis}
-              </pre>
+              <div className="prose prose-sm sm:prose-base max-w-none text-gray-800">
+                {analysis.split("\n").map((line, idx) => (
+                  <p key={idx} className="mb-2 leading-relaxed">
+                    {line}
+                  </p>
+                ))}
+              </div>
             </div>
           )}
         </div>
