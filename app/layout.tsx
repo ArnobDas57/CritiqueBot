@@ -24,7 +24,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased min-h-screen flex flex-col bg-black font-sans`}
       >
-        <main>{children}</main>
+        <main className="flex-grow overflow-auto">{children}</main>
         <Footer />
       </body>
     </html>
